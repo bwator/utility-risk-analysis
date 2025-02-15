@@ -145,6 +145,7 @@ def main():
     st.title("Utility Customer Risk Analysis Dashboard")
     st.write("Automatically generating comprehensive dataset...")
 
+    import os
     # Create output directory
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
