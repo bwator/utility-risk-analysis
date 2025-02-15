@@ -69,7 +69,7 @@ def calculate_risk_scores(customer_df):
     return merged_df
 
 
-def create_risk_dashboard(merged_df):
+def create_risk_dashboard(merged_df, dashboard):
     """Create interactive Streamlit dashboard for risk analysis"""
 
     st.title("Utility Customer Risk Analysis Dashboard")
@@ -444,7 +444,7 @@ def main():
             preprocessed_df = dashboard.df
 
             # Create dashboard visualizations with preprocessed data
-            create_risk_dashboard(preprocessed_df)
+            create_risk_dashboard(preprocessed_df, dashboard)
 
         except Exception as gen_error:
             st.error(f"Error generating dataset: {gen_error}")
