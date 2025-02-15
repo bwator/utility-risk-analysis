@@ -123,29 +123,42 @@ def create_risk_dashboard(merged_df):
                          title='Payment History vs Peak Usage Compliance')
         st.plotly_chart(fig, use_container_width=True)
 
+
     elif analysis_type == "Enhanced Intervention Analysis":
+
         st.header("Intervention Effectiveness Analysis")
 
-        # Traditional Risk Analysis Scatter Plot
-        st.subheader("Traditional Risk Analysis")
-        fig_intervention = px.scatter(merged_df,
-                                      x='payment_history_score',
-                                      y='risk_score',
-                                      color='risk_band',
-                                      size='average_monthly_bill',
-                                      hover_data=[
-                                          'account_number',
-                                          'credit_score',
-                                          'late_payments_30',
-                                          'late_payments_60',
-                                          'late_payments_90',
-                                          'autopay_status'
-                                      ],
-                                      title='Payment History and Risk Analysis')
-        st.plotly_chart(fig_intervention, use_container_width=True)
+        # Traditional Risk Analysis
 
-        # Note: Timeline and Intervention Effectiveness data require additional data processing
-        st.warning("Full intervention analysis requires additional intervention data.")
+        st.subheader("Traditional Risk Analysis")
+
+        effectiveness_fig = dashboard._create_effectiveness_figure()
+
+        st.plotly_chart(effectiveness_fig, use_container_width=True)
+
+        # Intervention Timeline
+
+        st.subheader("Intervention Timeline")
+
+        timeline_fig = dashboard._create_timeline_figure()
+
+        st.plotly_chart(timeline_fig, use_container_width=True)
+
+        # Intervention Type Performance
+
+        st.subheader("Intervention Type Performance")
+
+        type_performance_fig = dashboard._create_effectiveness_figure()
+
+        st.plotly_chart(type_performance_fig, use_container_width=True)
+
+        # Success Rate Analysis
+
+        st.subheader("Success Rate Analysis")
+
+        success_rate_fig = dashboard._create_success_rate_figure()
+
+        st.plotly_chart(success_rate_fig, use_container_width=True)
 
     elif analysis_type == "Temporal Analysis":
         st.header("Temporal Customer Analysis")
@@ -399,8 +412,6 @@ def main():
         import os
 
         st.sidebar.header("Risk Analysis Workflow")
-        st.title("Utility Customer Risk Analysis Dashboard")
-        st.write("Attempting to generate or load dataset...")
 
         # Create output directory
         output_dir = "output"
