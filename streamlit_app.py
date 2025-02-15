@@ -70,6 +70,7 @@ def calculate_risk_scores(customer_df):
 
 def create_risk_dashboard(merged_df):
     """Create interactive Streamlit dashboard for risk analysis"""
+
     st.title("Utility Customer Risk Analysis Dashboard")
 
     # Sidebar for navigation
@@ -397,7 +398,6 @@ def main():
         import os
 
         st.sidebar.header("Risk Analysis Workflow")
-
         st.title("Utility Customer Risk Analysis Dashboard")
         st.write("Attempting to generate or load dataset...")
 
@@ -405,17 +405,11 @@ def main():
         output_dir = "output"
         os.makedirs(output_dir, exist_ok=True)
 
-        # Always generate new dataset
         try:
-            # Generate customer data
+            # Generate and save initial data
             customer_df, usage_df = generate_utility_customer_data(num_customers=1000)
-            st.write("Customer data generated")
-
-            # Generate intervention data
             intervention_df = generate_intervention_data(customer_df)
-            st.write("Intervention data generated")
 
-            # Save generated data
             customer_path = os.path.join(output_dir, "utility_customer_data.csv")
             usage_path = os.path.join(output_dir, "utility_usage_data.csv")
             intervention_path = os.path.join(output_dir, "intervention_data.csv")
@@ -432,16 +426,17 @@ def main():
             calculator.process_customer_file(customer_path, risk_scores_path)
             merge_customer_and_risk_data(customer_path, risk_scores_path, merged_data_path)
 
-            # Load merged data
-            merged_df = pd.read_csv(merged_data_path)
-            st.write("Risk scores calculated")
+            # Initialize dashboard for preprocessing
+            dashboard = EnhancedRiskDashboard(merged_data_path)
+            # Use the preprocessed dataframe from the dashboard
+            preprocessed_df = dashboard.df
+
+            # Create dashboard visualizations with preprocessed data
+            create_risk_dashboard(preprocessed_df)
 
         except Exception as gen_error:
             st.error(f"Error generating dataset: {gen_error}")
             return
-
-        # Create dashboard with generated data
-        create_risk_dashboard(merged_df)
 
     except Exception as e:
         st.error(f"Unexpected error: {e}")
