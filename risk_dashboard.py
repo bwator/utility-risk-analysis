@@ -409,103 +409,74 @@ class EnhancedRiskDashboard:
             ], className="mb-8")
         ])
 
-    def create_delinquency_view(self):
-        """Create delinquency analysis view"""
-        # Calculate risk quintiles
-        self.df['risk_quintile'] = pd.qcut(self.df['risk_score'],
-                                           q=5,
-                                           labels=['Q1', 'Q2', 'Q3', 'Q4', 'Q5'])
+    def create_delinquency_view(merged_df):
+        # Calculate risk quintiles and statistics
+        merged_df['risk_quintile'] = pd.qcut(merged_df['risk_score'], q=5, labels=['Q1', 'Q2', 'Q3', 'Q4', 'Q5'])
 
-        # Calculate quintile statistics
-        quintile_stats = self.df.groupby('risk_quintile').agg({
+        quintile_stats = merged_df.groupby('risk_quintile').agg({
             'risk_score': 'mean',
             'late_payments_30': 'mean',
             'late_payments_60': 'mean',
             'late_payments_90': 'mean'
         }).reset_index()
 
-        # Calculate regional statistics
-        regional_stats = self.df.groupby('zip_code').agg({
+        regional_stats = merged_df.groupby('zip_code').agg({
             'risk_score': 'mean',
             'late_payments_30': 'mean',
             'payment_history_score': 'mean'
         }).reset_index()
 
-        return html.Div([
-            # Risk Quintile Analysis
-            html.Div([
-                html.H3("Risk Quintile Analysis",
-                        className="text-xl font-bold mb-4"),
-                dcc.Graph(
-                    figure=px.bar(
-                        quintile_stats,
-                        x='risk_quintile',
-                        y=['late_payments_30', 'late_payments_60', 'late_payments_90'],
-                        title='Delinquency Patterns by Risk Quintile',
-                        barmode='group'
-                    )
-                )
-            ], className="mb-8"),
+        # Risk Quintile Analysis
+        st.header("Risk Quintile Analysis")
+        fig_quintile = px.bar(
+            quintile_stats,
+            x='risk_quintile',
+            y=['late_payments_30', 'late_payments_60', 'late_payments_90'],
+            title='Delinquency Patterns by Risk Quintile',
+            barmode='group'
+        )
+        st.plotly_chart(fig_quintile, use_container_width=True)
 
-            # Delinquency Score Distribution
-            html.Div([
-                html.H3("Delinquency Risk Distribution",
-                        className="text-xl font-bold mb-4"),
-                dcc.Graph(
-                    figure=px.histogram(
-                        self.df,
-                        x='risk_score',
-                        color='risk_band',
-                        title='Risk Score Distribution with Delinquency Bands',
-                        marginal='box'
-                    )
-                )
-            ], className="mb-8"),
+        # Delinquency Score Distribution
+        st.header("Delinquency Risk Distribution")
+        fig_risk_dist = px.histogram(
+            merged_df,
+            x='risk_score',
+            color='risk_band',
+            title='Risk Score Distribution with Delinquency Bands',
+            marginal='box'
+        )
+        st.plotly_chart(fig_risk_dist, use_container_width=True)
 
-            # Geographic Delinquency Patterns
-            html.Div([
-                html.H3("Geographic Delinquency Patterns",
-                        className="text-xl font-bold mb-4"),
-                dcc.Graph(
-                    figure=px.scatter(
-                        regional_stats,
-                        x='payment_history_score',
-                        y='late_payments_30',
-                        size='risk_score',
-                        hover_data=['zip_code'],
-                        title='Payment History vs Delinquency by ZIP Code'
-                    )
-                )
-            ], className="mb-8"),
+        # Geographic Delinquency Patterns
+        st.header("Geographic Delinquency Patterns")
+        fig_geo_delinq = px.scatter(
+            regional_stats,
+            x='payment_history_score',
+            y='late_payments_30',
+            size='risk_score',
+            hover_data=['zip_code'],
+            title='Payment History vs Delinquency by ZIP Code'
+        )
+        st.plotly_chart(fig_geo_delinq, use_container_width=True)
 
-            # Key Insights Card
-            html.Div([
-                html.H3("Key Delinquency Insights",
-                        className="text-xl font-bold mb-4"),
-                html.Div([
-                    html.H4("Risk Quintile Analysis:", className="font-bold mt-2"),
-                    html.Ul([
-                        html.Li(
-                            f"Highest risk quintile (Q5) shows {quintile_stats['late_payments_30'].iloc[-1]:.1f} average 30-day late payments"),
-                        html.Li(
-                            f"Lowest risk quintile (Q1) shows {quintile_stats['late_payments_30'].iloc[0]:.1f} average 30-day late payments"),
-                    ], className="list-disc pl-6 mb-4"),
+        # Key Insights - Using Streamlit native components
+        st.header("Key Delinquency Insights")
 
-                    html.H4("Geographic Patterns:", className="font-bold mt-2"),
-                    html.Ul([
-                        html.Li("ZIP codes with higher risk scores show increased delinquency rates"),
-                        html.Li("Payment history strongly correlates with delinquency risk"),
-                    ], className="list-disc pl-6 mb-4"),
+        st.subheader("Risk Quintile Analysis")
+        high_risk = quintile_stats[quintile_stats['risk_quintile'] == 'Q5']['late_payments_30'].values[0]
+        low_risk = quintile_stats[quintile_stats['risk_quintile'] == 'Q1']['late_payments_30'].values[0]
+        st.write(f"High-risk quintile averages {high_risk:.1f} late payments per month")
+        st.write(f"Low-risk quintile averages {low_risk:.1f} late payments per month")
 
-                    html.H4("Recommendations:", className="font-bold mt-2"),
-                    html.Ul([
-                        html.Li("Focus intervention strategies on high-risk quintiles"),
-                        html.Li("Develop targeted programs for ZIP codes with elevated risk profiles"),
-                        html.Li("Implement early warning system based on payment history patterns"),
-                    ], className="list-disc pl-6")
-                ], className="bg-white p-6 rounded-lg shadow")
-            ], className="mb-8")
-        ])
+        st.subheader("Geographic Patterns")
+        st.write("ZIP codes with higher risk scores show increased delinquency rates")
+        st.write("Payment history strongly correlates with delinquency risk")
+
+        st.subheader("Recommendations")
+        st.write("Focus intervention strategies on high-risk quintiles")
+        st.write("Develop targeted programs for ZIP codes with elevated risk profiles")
+        st.write("Implement early warning system based on payment history patterns")
 
     def create_predictive_view(self):
         """Create predictive analysis view"""
