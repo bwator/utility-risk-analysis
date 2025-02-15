@@ -158,5 +158,5 @@ def main():
         st.warning("No existing risk data found. Please generate a dataset.")
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#    main()
