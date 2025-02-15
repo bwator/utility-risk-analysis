@@ -140,15 +140,26 @@ def create_risk_dashboard(merged_df):
 
 
 def main():
-    # Data Generation Stage
     st.sidebar.header("Risk Analysis Workflow")
+
+    # Always show initial welcome message
+    st.title("Utility Customer Risk Analysis Dashboard")
+    st.write("Welcome to the Utility Risk Analysis Tool")
+
+    # Add an initial state with data generation option
+    st.write("To get started, click 'Generate New Dataset'")
+
+    # Data Generation Stage
     if st.sidebar.button("Generate New Dataset"):
         customer_df, usage_df, intervention_df = generate_data()
 
     # Risk Score Calculation Stage
     if st.sidebar.button("Calculate Risk Scores"):
-        merged_df = calculate_risk_scores(customer_df)
-        create_risk_dashboard(merged_df)
+        try:
+            merged_df = calculate_risk_scores(customer_df)
+            create_risk_dashboard(merged_df)
+        except NameError:
+            st.warning("Please generate a dataset first!")
 
     # Directly load existing data if available
     try:
@@ -157,6 +168,5 @@ def main():
     except FileNotFoundError:
         st.warning("No existing risk data found. Please generate a dataset.")
 
-
-# if __name__ == "__main__":
-#    main()
+if __name__ == "__main__":
+    main()
