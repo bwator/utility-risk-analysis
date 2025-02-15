@@ -9,6 +9,7 @@ from utility_data_generator import generate_utility_customer_data, generate_inte
 from comprehensive_utility_risk_calculator import ComprehensiveUtilityRiskCalculator
 from risk_analysis_framework import analyze_risk_data
 from main import merge_customer_and_risk_data
+from risk_dashboard import EnhancedRiskDashboard
 
 # Streamlit page configuration
 st.set_page_config(page_title="Utility Risk Analysis", layout="wide")
