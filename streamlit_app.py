@@ -142,31 +142,85 @@ def create_risk_dashboard(merged_df):
 def main():
     st.sidebar.header("Risk Analysis Workflow")
 
-    # Always show initial welcome message
     st.title("Utility Customer Risk Analysis Dashboard")
-    st.write("Welcome to the Utility Risk Analysis Tool")
+    st.write("Automatically generating comprehensive dataset...")
 
-    # Add an initial state with data generation option
-    st.write("To get started, click 'Generate New Dataset'")
+    # Create output directory
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
 
-    # Data Generation Stage
-    if st.sidebar.button("Generate New Dataset"):
-        customer_df, usage_df, intervention_df = generate_data()
-
-    # Risk Score Calculation Stage
-    if st.sidebar.button("Calculate Risk Scores"):
-        try:
-            merged_df = calculate_risk_scores(customer_df)
-            create_risk_dashboard(merged_df)
-        except NameError:
-            st.warning("Please generate a dataset first!")
-
-    # Directly load existing data if available
+    # Attempt to load existing data, otherwise generate new
     try:
         merged_df = pd.read_csv("output/customer_data_risk.csv")
-        create_risk_dashboard(merged_df)
+        intervention_df = pd.read_csv("output/intervention_data.csv")
     except FileNotFoundError:
-        st.warning("No existing risk data found. Please generate a dataset.")
+        # Automatically generate data if no existing dataset
+        with st.spinner('Generating comprehensive dataset...'):
+            # Generate customer data
+            customer_df, usage_df = generate_utility_customer_data(num_customers=1000)
+
+            # Generate intervention data
+            intervention_df = generate_intervention_data(customer_df)
+
+            # Save generated data
+            customer_path = os.path.join(output_dir, "utility_customer_data.csv")
+            usage_path = os.path.join(output_dir, "utility_usage_data.csv")
+            intervention_path = os.path.join(output_dir, "intervention_data.csv")
+
+            customer_df.to_csv(customer_path, index=False)
+            usage_df.to_csv(usage_path, index=False)
+            intervention_df.to_csv(intervention_path, index=False)
+
+            # Calculate risk scores
+            calculator = ComprehensiveUtilityRiskCalculator()
+            risk_scores_path = os.path.join(output_dir, "risk_scores.csv")
+            merged_data_path = os.path.join(output_dir, "customer_data_risk.csv")
+
+            calculator.process_customer_file(customer_path, risk_scores_path)
+            merge_customer_and_risk_data(customer_path, risk_scores_path, merged_data_path)
+
+            # Load merged data
+            merged_df = pd.read_csv(merged_data_path)
+
+    # Create dashboard with loaded or generated data
+    create_risk_dashboard(merged_df)
+
+    # Optional: Add sidebar buttons for regeneration
+    if st.sidebar.button("Regenerate Full Dataset"):
+        # Clear existing files
+        import glob
+        import os
+        files = glob.glob(os.path.join(output_dir, "*"))
+        for f in files:
+            os.remove(f)
+
+        # Regenerate dataset
+        with st.spinner('Regenerating comprehensive dataset...'):
+            # Generate customer data
+            customer_df, usage_df = generate_utility_customer_data(num_customers=1000)
+
+            # Generate intervention data
+            intervention_df = generate_intervention_data(customer_df)
+
+            # Save generated data
+            customer_path = os.path.join(output_dir, "utility_customer_data.csv")
+            usage_path = os.path.join(output_dir, "utility_usage_data.csv")
+            intervention_path = os.path.join(output_dir, "intervention_data.csv")
+
+            customer_df.to_csv(customer_path, index=False)
+            usage_df.to_csv(usage_path, index=False)
+            intervention_df.to_csv(intervention_path, index=False)
+
+            # Calculate risk scores
+            calculator = ComprehensiveUtilityRiskCalculator()
+            risk_scores_path = os.path.join(output_dir, "risk_scores.csv")
+            merged_data_path = os.path.join(output_dir, "customer_data_risk.csv")
+
+            calculator.process_customer_file(customer_path, risk_scores_path)
+            merge_customer_and_risk_data(customer_path, risk_scores_path, merged_data_path)
+
+            # Rerun to refresh the app
+            st.experimental_rerun()
 
 if __name__ == "__main__":
     main()
