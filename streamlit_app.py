@@ -140,88 +140,66 @@ def create_risk_dashboard(merged_df):
 
 
 def main():
-    st.sidebar.header("Risk Analysis Workflow")
-
-    st.title("Utility Customer Risk Analysis Dashboard")
-    st.write("Automatically generating comprehensive dataset...")
-
-    import os
-    # Create output directory
-    output_dir = "output"
-    os.makedirs(output_dir, exist_ok=True)
-
-    # Attempt to load existing data, otherwise generate new
     try:
-        merged_df = pd.read_csv("output/customer_data_risk.csv")
-        intervention_df = pd.read_csv("output/intervention_data.csv")
-    except FileNotFoundError:
-        # Automatically generate data if no existing dataset
-        with st.spinner('Generating comprehensive dataset...'):
-            # Generate customer data
-            customer_df, usage_df = generate_utility_customer_data(num_customers=1000)
-
-            # Generate intervention data
-            intervention_df = generate_intervention_data(customer_df)
-
-            # Save generated data
-            customer_path = os.path.join(output_dir, "utility_customer_data.csv")
-            usage_path = os.path.join(output_dir, "utility_usage_data.csv")
-            intervention_path = os.path.join(output_dir, "intervention_data.csv")
-
-            customer_df.to_csv(customer_path, index=False)
-            usage_df.to_csv(usage_path, index=False)
-            intervention_df.to_csv(intervention_path, index=False)
-
-            # Calculate risk scores
-            calculator = ComprehensiveUtilityRiskCalculator()
-            risk_scores_path = os.path.join(output_dir, "risk_scores.csv")
-            merged_data_path = os.path.join(output_dir, "customer_data_risk.csv")
-
-            calculator.process_customer_file(customer_path, risk_scores_path)
-            merge_customer_and_risk_data(customer_path, risk_scores_path, merged_data_path)
-
-            # Load merged data
-            merged_df = pd.read_csv(merged_data_path)
-
-    # Create dashboard with loaded or generated data
-    create_risk_dashboard(merged_df)
-
-    # Optional: Add sidebar buttons for regeneration
-    if st.sidebar.button("Regenerate Full Dataset"):
-        # Clear existing files
-        import glob
         import os
-        files = glob.glob(os.path.join(output_dir, "*"))
-        for f in files:
-            os.remove(f)
 
-        # Regenerate dataset
-        with st.spinner('Regenerating comprehensive dataset...'):
-            # Generate customer data
-            customer_df, usage_df = generate_utility_customer_data(num_customers=1000)
+        st.sidebar.header("Risk Analysis Workflow")
 
-            # Generate intervention data
-            intervention_df = generate_intervention_data(customer_df)
+        st.title("Utility Customer Risk Analysis Dashboard")
+        st.write("Attempting to generate or load dataset...")
 
-            # Save generated data
-            customer_path = os.path.join(output_dir, "utility_customer_data.csv")
-            usage_path = os.path.join(output_dir, "utility_usage_data.csv")
-            intervention_path = os.path.join(output_dir, "intervention_data.csv")
+        # Create output directory
+        output_dir = "output"
+        os.makedirs(output_dir, exist_ok=True)
 
-            customer_df.to_csv(customer_path, index=False)
-            usage_df.to_csv(usage_path, index=False)
-            intervention_df.to_csv(intervention_path, index=False)
+        # Attempt to load existing data, otherwise generate new
+        try:
+            merged_df = pd.read_csv("output/customer_data_risk.csv")
+            st.write("Loaded existing dataset")
+        except Exception as load_error:
+            st.write(f"Error loading existing dataset: {load_error}")
+            st.write("Generating new dataset...")
 
-            # Calculate risk scores
-            calculator = ComprehensiveUtilityRiskCalculator()
-            risk_scores_path = os.path.join(output_dir, "risk_scores.csv")
-            merged_data_path = os.path.join(output_dir, "customer_data_risk.csv")
+            # Detailed error handling for data generation
+            try:
+                # Generate customer data
+                customer_df, usage_df = generate_utility_customer_data(num_customers=1000)
+                st.write("Customer data generated")
 
-            calculator.process_customer_file(customer_path, risk_scores_path)
-            merge_customer_and_risk_data(customer_path, risk_scores_path, merged_data_path)
+                # Generate intervention data
+                intervention_df = generate_intervention_data(customer_df)
+                st.write("Intervention data generated")
 
-            # Rerun to refresh the app
-            st.experimental_rerun()
+                # Save generated data
+                customer_path = os.path.join(output_dir, "utility_customer_data.csv")
+                usage_path = os.path.join(output_dir, "utility_usage_data.csv")
+                intervention_path = os.path.join(output_dir, "intervention_data.csv")
+
+                customer_df.to_csv(customer_path, index=False)
+                usage_df.to_csv(usage_path, index=False)
+                intervention_df.to_csv(intervention_path, index=False)
+
+                # Calculate risk scores
+                calculator = ComprehensiveUtilityRiskCalculator()
+                risk_scores_path = os.path.join(output_dir, "risk_scores.csv")
+                merged_data_path = os.path.join(output_dir, "customer_data_risk.csv")
+
+                calculator.process_customer_file(customer_path, risk_scores_path)
+                merge_customer_and_risk_data(customer_path, risk_scores_path, merged_data_path)
+
+                # Load merged data
+                merged_df = pd.read_csv(merged_data_path)
+                st.write("Risk scores calculated")
+
+            except Exception as gen_error:
+                st.error(f"Error generating dataset: {gen_error}")
+                return
+
+        # Create dashboard with loaded or generated data
+        create_risk_dashboard(merged_df)
+
+    except Exception as e:
+        st.error(f"Unexpected error: {e}")
 
 if __name__ == "__main__":
     main()
