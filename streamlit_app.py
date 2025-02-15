@@ -132,9 +132,18 @@ def create_risk_dashboard(merged_df, dashboard):
 
         st.subheader("Traditional Risk Analysis")
 
-        effectiveness_fig = dashboard._create_effectiveness_figure()
+        effectiveness_fig = px.scatter(
+            merged_df,
+            x='payment_history_score',
+            y='risk_score',
+            color='risk_band',
+            size='average_monthly_bill',
+            hover_data=['account_number', 'credit_score', 'late_payments_30',
+                        'late_payments_60', 'late_payments_90', 'autopay_status'],
+            title='Payment History and Risk Analysis'
+        )
+        st.plotly_chart(effectiveness_fig, use_container_width=True, key="trad_risk")
 
-        st.plotly_chart(effectiveness_fig, use_container_width=True)
 
         # Intervention Timeline
 
@@ -142,7 +151,7 @@ def create_risk_dashboard(merged_df, dashboard):
 
         timeline_fig = dashboard._create_timeline_figure()
 
-        st.plotly_chart(timeline_fig, use_container_width=True)
+        st.plotly_chart(timeline_fig, use_container_width=True, key="timeline")
 
         # Intervention Type Performance
 
@@ -150,7 +159,7 @@ def create_risk_dashboard(merged_df, dashboard):
 
         type_performance_fig = dashboard._create_effectiveness_figure()
 
-        st.plotly_chart(type_performance_fig, use_container_width=True)
+        st.plotly_chart(type_performance_fig, use_container_width=True, key="type_perf")
 
         # Success Rate Analysis
 
@@ -158,7 +167,7 @@ def create_risk_dashboard(merged_df, dashboard):
 
         success_rate_fig = dashboard._create_success_rate_figure()
 
-        st.plotly_chart(success_rate_fig, use_container_width=True)
+        st.plotly_chart(success_rate_fig, use_container_width=True, key="success_rate")
 
     elif analysis_type == "Temporal Analysis":
         st.header("Temporal Customer Analysis")
