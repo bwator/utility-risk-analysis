@@ -157,50 +157,42 @@ def main():
         output_dir = "output"
         os.makedirs(output_dir, exist_ok=True)
 
-        # Attempt to load existing data, otherwise generate new
+        # Always generate new dataset
         try:
-            merged_df = pd.read_csv("output/customer_data_risk.csv")
-            st.write("Loaded existing dataset")
-        except Exception as load_error:
-            st.write(f"Error loading existing dataset: {load_error}")
-            st.write("Generating new dataset...")
+            # Generate customer data
+            customer_df, usage_df = generate_utility_customer_data(num_customers=1000)
+            st.write("Customer data generated")
 
-            # Detailed error handling for data generation
-            try:
-                # Generate customer data
-                customer_df, usage_df = generate_utility_customer_data(num_customers=1000)
-                st.write("Customer data generated")
+            # Generate intervention data
+            intervention_df = generate_intervention_data(customer_df)
+            st.write("Intervention data generated")
 
-                # Generate intervention data
-                intervention_df = generate_intervention_data(customer_df)
-                st.write("Intervention data generated")
+            # Save generated data
+            customer_path = os.path.join(output_dir, "utility_customer_data.csv")
+            usage_path = os.path.join(output_dir, "utility_usage_data.csv")
+            intervention_path = os.path.join(output_dir, "intervention_data.csv")
 
-                # Save generated data
-                customer_path = os.path.join(output_dir, "utility_customer_data.csv")
-                usage_path = os.path.join(output_dir, "utility_usage_data.csv")
-                intervention_path = os.path.join(output_dir, "intervention_data.csv")
+            customer_df.to_csv(customer_path, index=False)
+            usage_df.to_csv(usage_path, index=False)
+            intervention_df.to_csv(intervention_path, index=False)
 
-                customer_df.to_csv(customer_path, index=False)
-                usage_df.to_csv(usage_path, index=False)
-                intervention_df.to_csv(intervention_path, index=False)
+            # Calculate risk scores
+            calculator = ComprehensiveUtilityRiskCalculator()
+            risk_scores_path = os.path.join(output_dir, "risk_scores.csv")
+            merged_data_path = os.path.join(output_dir, "customer_data_risk.csv")
 
-                # Calculate risk scores
-                calculator = ComprehensiveUtilityRiskCalculator()
-                risk_scores_path = os.path.join(output_dir, "risk_scores.csv")
-                merged_data_path = os.path.join(output_dir, "customer_data_risk.csv")
+            calculator.process_customer_file(customer_path, risk_scores_path)
+            merge_customer_and_risk_data(customer_path, risk_scores_path, merged_data_path)
 
-                calculator.process_customer_file(customer_path, risk_scores_path)
-                merge_customer_and_risk_data(customer_path, risk_scores_path, merged_data_path)
+            # Load merged data
+            merged_df = pd.read_csv(merged_data_path)
+            st.write("Risk scores calculated")
 
-                # Load merged data
-                merged_df = pd.read_csv(merged_data_path)
-                st.write("Risk scores calculated")
+        except Exception as gen_error:
+            st.error(f"Error generating dataset: {gen_error}")
+            return
 
-            except Exception as gen_error:
-                st.error(f"Error generating dataset: {gen_error}")
-                return
-
-        # Create dashboard with loaded or generated data
+        # Create dashboard with generated data
         create_risk_dashboard(merged_df)
 
     except Exception as e:
